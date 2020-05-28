@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.17)
 
 project(sample-fem)
 
-message("  main module")
+message("    main:")
 
 add_subdirectory(core)
+add_subdirectory(test1)
