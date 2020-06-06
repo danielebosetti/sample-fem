@@ -11,9 +11,10 @@ namespace fem {
 	template<typename key> 
 	void addAndCheckDuplicate(std::unordered_set<key>& ids, key id, std::string type) {
 		if (ids.find(id) != ids.end()) {
-			warn("found duplicate {} id={}", type, nodeId);
-			throw std::exception(fmt::format("duplicate {} id={}", type, id));
+			warn("found duplicate {} id={}", type, id);
+			throw std::exception(fmt::format("duplicate {} id={}", type, id).c_str());
 		}
+		ids.insert(id);
 	}
 
 	void Model::add(Node n) {

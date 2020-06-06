@@ -35,7 +35,6 @@ public:
 };
 
 int main(int argc, char* argv[]) {
-  spdlog::set_pattern("[%^%l%$] %v");
 	::testing::InitGoogleTest(&argc, argv);
 	::testing::AddGlobalTestEnvironment(new TestEnvironment);
 	return RUN_ALL_TESTS();

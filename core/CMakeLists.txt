@@ -30,7 +30,11 @@ find_package(GTest REQUIRED)
 
 add_executable( core_test ${MODULE_SOURCES_TEST} )
 target_link_libraries( core_test core )
-target_link_libraries( core_test GTest::GTest GTest::Main)
+target_link_libraries( core_test GTest::GTest)
+
+add_executable( misc_core_test test/other-tests.cpp )
+target_link_libraries( misc_core_test core )
+target_link_libraries( misc_core_test GTest::GTest)
 
 # add_executable( log_test test/test-log.cpp )
 # target_link_libraries( log_test PRIVATE spdlog::spdlog spdlog::spdlog_header_only)
