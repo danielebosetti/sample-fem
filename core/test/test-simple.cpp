@@ -63,6 +63,8 @@ TEST(core_misc, check_hash_map) {
 TEST(core_misc, check_unique_ptr) {
 	std::unique_ptr<int> p;
 	EXPECT_FALSE(p);
+	p = std::make_unique<int>(9);
+	EXPECT_TRUE(p);
 }
 
 TEST(core_misc, basic_1) {
@@ -102,15 +104,13 @@ TEST(core_misc, global_actions_3_force)
 	NodeForce f3{ 2, 1, 0, -4, -3 };
 	NodeForce f4{ 3, 0, 4, 0, -3 };
 	NodeForce f5{ 4, 2, 5, 5, 0 };
-	m.add(n1, n2, f1, f2, f3, f4, f5);
+	m.add(n1, n2, n3, f1, f2, f3, f4, f5);
 	m.validate();
 	m.initCoords();
 	VectorXd r = *m.getGlobalActions();
-	//Eigen::VectorXd expected(9);
-	//expected.setZero();
-	//expected()
-
+	Eigen::VectorXd expected(9);
+	expected << 4, 0, -6, 1, -2, -6, 5, 5, 0;
 	info("r={}", r.transpose());
-	//info("expected={}", expected.transpose());
-	//EXPECT_NEAR((r - expected).norm(), 0, 1.e-6);
+	info("expected={}", expected.transpose());
+	EXPECT_NEAR((r - expected).norm(), 0, 1.e-6);
 }

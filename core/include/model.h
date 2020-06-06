@@ -64,9 +64,7 @@ namespace fem {
 		template<typename ostream>
 		friend ostream& operator<<(ostream& os, const fem::Model& m)
 		{
-			return os << fmt::format("Model[id={}]", m.id);
+			return os << fmt::format("Model[id={}]", m.modelId);
 		}
-
 	};
-
 }
