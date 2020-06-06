@@ -1,0 +1,10 @@
+
+
+test-case: 1
+create model with 2 nodes, and gravity
+
+
+
+
+
+
