@@ -4,6 +4,8 @@ add_compile_options(/wd26444)
 
 file(GLOB_RECURSE MODULE_SOURCES src/*.cpp)
 file(GLOB_RECURSE MODULE_HEADERS include/*.h)
+#file(GLOB_RECURSE MODULE_SOURCES_TEST test/*.cpp)
+set(MODULE_SOURCES_TEST test/test-simple.cpp)
 
 source_group("src" FILES ${MODULE_SOURCES})
 source_group("include" FILES ${MODULE_HEADERS})
@@ -21,15 +23,17 @@ target_link_libraries(core PUBLIC Eigen3::Eigen)
 # target_link_libraries(core PRIVATE fmt::fmt fmt::fmt-header-only)
 
 find_package(spdlog CONFIG REQUIRED)
-target_link_libraries(core PRIVATE spdlog::spdlog spdlog::spdlog_header_only)
-
+target_link_libraries(core PUBLIC spdlog::spdlog spdlog::spdlog_header_only)
 
 enable_testing()
 find_package(GTest REQUIRED)
 
-add_executable( core_test test/test.cpp )
+add_executable( core_test ${MODULE_SOURCES_TEST} )
 target_link_libraries( core_test core )
 target_link_libraries( core_test GTest::GTest GTest::Main)
+
+# add_executable( log_test test/test-log.cpp )
+# target_link_libraries( log_test PRIVATE spdlog::spdlog spdlog::spdlog_header_only)
 
 add_test(core_test_all core_test)
 # todo filter tests

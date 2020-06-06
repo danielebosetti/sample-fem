@@ -6,7 +6,6 @@ namespace fem {
 	class BeamDistLoad {
 	public:
 		BeamDistLoad(int id, int beamId, double x, double y, double z);
-		std::string BeamDistLoad::toString();
 	private:
 		int id;
 		int beamId;

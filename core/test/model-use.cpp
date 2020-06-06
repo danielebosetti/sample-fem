@@ -11,8 +11,11 @@
 
 using namespace fem;
 using std::cout;
+using spdlog::info;
+using spdlog::warn;
 
-TEST(sample_test_case, test_versor)
+//TEST(sample_test_case, DISABLED_test_versor)
+void go()
 {
 	std::filesystem::create_directory("logs");
 	auto logger = spdlog::basic_logger_mt("test", "logs/test.txt");
@@ -22,14 +25,11 @@ TEST(sample_test_case, test_versor)
 	Node n1{ 0, 0, 0, 0 };
 	Node n2{ 0, 1, 0, 0 };
 	Beam b1{ 0, n1, n2 };
-	cout << "b1=" << b1;
 
 	auto sor = b1.getLocalSOR();
-	cout << "sor=\n" << sor << "\n";
+	info("\n{}", sor);
 
-	std::stringstream ss;
-	ss << sor;
-	spdlog::info("sor={}", ss.str());
+	info("sor={}", sor);
 
 	auto e1 = sor.col(0);
 	auto e2 = sor.col(1);
@@ -39,26 +39,26 @@ TEST(sample_test_case, test_versor)
 	EXPECT_FLOAT_EQ(e3.norm(), 1.);
 }
 
-TEST(sample_test_case, sample_test)
+//TEST(sample_test_case, sample_test)
+void go2()
 {
 	Node n1{ 0, 0, 0, 0 };
-	Node n2{ 1, 1, 1, 1 };
+	Node n2{ 1, 1, 0, 0 };
+	Node n3{ 2, 2, 0, 0 };
+
 	Beam b1{ 0, n1, n2 };
-	BeamDistLoad beamDistLoad{ 0, 1, 0, 0, -10 };
+	Beam b2{ 0, n2, n3 };
+	BeamDistLoad beamDistLoad1{ 0, 1, 0, 0, -10 };
 
-	spdlog::info("b1={}", b1);
-	spdlog::info("beamDistLoad={}", beamDistLoad);
-
-	//auto k = b1.getLocalStiffness();
-	//cout << "\nk=\n" << k << "\n";
-	auto sor = b1.getLocalSOR();
-//	cout << "\nsor=\n" << sor << "\n";
 	Model m;
 	m.add(n1);
 	m.add(n2);
-	m.listNodes();
-	m.add(beamDistLoad);
-	m.listBeamDistLoads();
+	m.add(n3);
+	m.add(b1);
+	m.add(b2);
+	m.add(beamDistLoad1);
+	
+	m.listAll();
 
 }
 

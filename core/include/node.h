@@ -2,17 +2,21 @@
 
 #include <Eigen/Dense>
 #include <string>
+#include <atomic>
 #include <fmt/ostream.h>
 
 namespace fem {
 	class Node {
+		std::atomic<int> counter{ 0 };
 	public:
-		Node() : id{ 0 }, x{ 0 }, y{ 0 }, z{ 0 } {};
-		Node(const Node& other) = default;
+		Node() : Node{ 0, 0, 0, 0 } {};
+		Node(const Node& other) : Node{ other.id, other.x, other.y, other.z } {};
 		Node(int id, double x, double y, double z);
+		~Node();
+
 		Eigen::Vector3d getPosition();
 		// return the node id
-		int getId();
+		int getId() const;
 		// return the number of DOF of this node
 		int dofCount();
 

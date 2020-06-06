@@ -36,4 +36,9 @@ namespace fem {
 		return res;
 	}
 
+	int Beam::getId() const
+	{
+		return id;
+	}
+
 }
