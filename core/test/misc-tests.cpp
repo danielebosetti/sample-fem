@@ -34,3 +34,9 @@ int main(int argc, char* argv[]) {
 	::testing::InitGoogleTest(&argc, argv);
 	return RUN_ALL_TESTS();
 }
+
+TEST(core_misc_test, test_missing_node)
+{
+	Model m;
+	EXPECT_ANY_THROW(m.getNode(1));
+}

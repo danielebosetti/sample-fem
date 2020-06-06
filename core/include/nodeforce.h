@@ -10,6 +10,8 @@ namespace fem {
 	public:
 		NodeForce(int id, int nodeId, double x, double y, double z);
 		int getId();
+		int getNodeId() { return nodeId; }
+		Eigen::Vector3d& getPosition() { return position; }
 
 	private:
 		int id;

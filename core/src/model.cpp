@@ -1,13 +1,18 @@
+
 #include "model.h"
 
 #include <iostream>
 #include "spdlog/spdlog.h"
+#include "coords.h"
 
 using spdlog::info;
 using spdlog::warn;
 
 namespace fem {
 
+	/*
+	adds [id] to the given list, and throws if id is duplicated
+	*/
 	template<typename key> 
 	void addAndCheckDuplicate(std::unordered_set<key>& ids, key id, std::string type) {
 		if (ids.find(id) != ids.end()) {
@@ -49,7 +54,44 @@ namespace fem {
 	void Model::add(BeamDistLoad beamDistLoad) {
 		beamDistLoads.push_back(beamDistLoad);
 	}
-	
+
+	Node Model::getNode(int id) {
+		if (hasNode(id)) {
+			return nodesMap[id];
+		}
+		else {
+			warn("getNode: node not found, id={}", id);
+			throw std::exception(fmt::format("getNode: node not found, id={}", id).c_str());
+		}
+	}
+
+	bool Model::hasNode(int nodeId) {
+		return nodeIds.find(nodeId) != nodeIds.end();
+	}
+
+	void Model::validate() {
+		info("validate");
+		for (NodeForce& f : nodeForces) {
+			if (!hasNode(f.getNodeId())) {
+				auto msg = fmt::format("validate: missing node, force id={} node-id={}", f.getId(), f.getNodeId());
+				warn(msg);
+				throw std::exception(msg.c_str());
+			}
+		}
+	}
+
+	void Model::initCoords() {
+		// init the global coords
+		info("init the global coords");
+
+		ch = std::make_unique<CoordsHolder>();
+
+		// for all nodes,
+		for (auto& n : nodes) {
+			ch->registerNode(n);
+		}
+	}
+
 	/*
 	solve the model using linear static analysis
 	build the total forces applied to the model,
@@ -59,19 +101,21 @@ namespace fem {
 	*/
 	void Model::solve() {
 		info("solve: called");
+		initCoords();
 
-		// init the global coords
-		info("init the global coords");
-		std::vector<CoordMapping> coords;
-		int globalCount = 0;
-		// for all nodes,
-		for (auto& n : nodes) {
-			// get x, y, z
-			coords.push_back(CoordMapping{ globalCount++,n.getId(),0 });
-			coords.push_back(CoordMapping{ globalCount++,n.getId(),1 });
-			coords.push_back(CoordMapping{ globalCount++,n.getId(),2 });
+		// compute the residual force
+		// for all forces,
+		for (NodeForce& f : nodeForces) {
+			// convert the local force to a global force
+			// get node id
+			int nodeId = f.getNodeId();
+			// get node
+			Node& node = getNode(nodeId);
+			// get coords
+			//ch.getCoords(nodeId);
+			// map force_x, force_y, force_z
 		}
-		fem::listAll("CoordMappings:", coords);
+
 
 		// for all elements,
 		for (Beam& b : beams) {
@@ -84,7 +128,35 @@ namespace fem {
 		// for all forces/loads, retrieve the local force and convert into global force
 
 
-
 	}
+	
+	using Eigen::VectorXd;
+
+	std::unique_ptr<VectorXd> Model::getGlobalActions() {
+		if (!ch) {
+			warn("ch is uninitialized");
+			throw std::exception("ch is uninitialized");
+		}
+		int numNodes = nodes.size();
+		// sum up all coords for all nodes
+		auto res = std::make_unique<VectorXd>(numNodes*3);
+		res->setZero();
+		// for each force
+		for (NodeForce& f : nodeForces) {
+
+			// convert the local forces into global forces
+			// for each force coord, get the respective global coord
+			int nodeId = f.getNodeId();
+			
+			int globalIdX = ch->getGlobalCoord(nodeId, 0);
+			int globalIdY = ch->getGlobalCoord(nodeId, 1);
+			int globalIdZ = ch->getGlobalCoord(nodeId, 2);
+			(*res)[globalIdX] += f.getPosition().x();
+			(*res)[globalIdY] += f.getPosition().y();
+			(*res)[globalIdZ] += f.getPosition().z();
+		}
+		return res;
+	}
+
 
 }

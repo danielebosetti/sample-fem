@@ -32,7 +32,7 @@ add_executable( core_test ${MODULE_SOURCES_TEST} )
 target_link_libraries( core_test core )
 target_link_libraries( core_test GTest::GTest)
 
-add_executable( misc_core_test test/other-tests.cpp )
+add_executable( misc_core_test test/misc-tests.cpp )
 target_link_libraries( misc_core_test core )
 target_link_libraries( misc_core_test GTest::GTest)
 
