@@ -114,3 +114,31 @@ TEST(core_misc, global_actions_3_force)
 	info("expected={}", expected.transpose());
 	EXPECT_NEAR((r - expected).norm(), 0, 1.e-6);
 }
+TEST(core_misc, beam_stiff_1) {
+	Model m;
+	Node n1{ 0, 0, 0, 0 };
+	Node n2{ 1, 1, 0, 0 };
+	Beam b1{ 0, n1, n2 };
+
+	auto k = b1.getLocalStiffness();
+	auto sor = b1.getLocalSOR();
+	info("\nk=\n{}", k);
+	info("\nsor=\n{}", sor);
+
+	//auto k = m.calcLocalStiffnessMatrix(b1);
+	//info("\nk=\n{}", k);
+}
+TEST(core_misc, beam_stiff_2) {
+	Model m;
+	Node n1{ 0, 0, 0, 0 };
+	Node n2{ 1, 1, 1, 0 };
+	Beam b1{ 0, n1, n2 };
+
+	auto k = b1.getLocalStiffness();
+	auto sor = b1.getLocalSOR();
+	info("\nk=\n{}", k);
+	info("\nsor=\n{}", sor);
+
+	//auto k = m.calcLocalStiffnessMatrix(b1);
+	//info("\nk=\n{}", k);
+}

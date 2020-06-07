@@ -6,10 +6,7 @@ project(sample-fem)
 
 message("    main:")
 
-
-
 add_subdirectory(core)
-add_subdirectory(test1)
 
 # 
 set(VS_STARTUP_PROJECT core_test)

@@ -92,6 +92,13 @@ namespace fem {
 		}
 	}
 
+	Eigen::MatrixXd Model::calcLocalStiffnessMatrix(Beam b) {
+		// calc k, in local coord indexes, but in global SOR
+		auto k = b.getLocalStiffness();
+		auto sor = b.getLocalSOR();
+		return k;
+	}
+
 	/*
 	solve the model using linear static analysis
 	build the total forces applied to the model,
@@ -103,24 +110,13 @@ namespace fem {
 		info("solve: called");
 		initCoords();
 
-		// compute the residual force
-		// for all forces,
-		for (NodeForce& f : nodeForces) {
-			// convert the local force to a global force
-			// get node id
-			int nodeId = f.getNodeId();
-			// get node
-			Node& node = getNode(nodeId);
-			// get coords
-			//ch.getCoords(nodeId);
-			// map force_x, force_y, force_z
-		}
-
+		// residual, solve for K*x=r
+		auto res = getGlobalActions();
 
 		// for all elements,
 		for (Beam& b : beams) {
-			auto k = b.getLocalStiffness();
-			auto sor = b.getLocalSOR();
+
+			calcLocalStiffnessMatrix(b);
 
 		}
 		// build the local stiffness matrix

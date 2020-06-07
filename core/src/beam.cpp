@@ -6,6 +6,7 @@
 
 using fem::Node;
 using Eigen::Vector3d;
+using Eigen::MatrixXd;
 
 namespace fem {
 
@@ -13,9 +14,9 @@ namespace fem {
 
 	}
 
-	NodeDofMatrix Beam::getLocalStiffness() {
-		NodeDofMatrix res;
-		res << NodeDofMatrix::Zero();
+	MatrixXd Beam::getLocalStiffness() {
+		MatrixXd res(6,6);
+		res.setZero();
 		res(0, 0) = 1;
 		res(3, 0) = -1;
 		res(0, 3) = -1;
@@ -23,8 +24,8 @@ namespace fem {
 		return res;
 	}
 
-	LocalSOR Beam::getLocalSOR() {
-		LocalSOR res;
+	Eigen::Matrix3d Beam::getLocalSOR() {
+		Eigen::Matrix3d res;
 		Vector3d e1 = node2.getPosition() - node1.getPosition();
 		e1.normalize();
 

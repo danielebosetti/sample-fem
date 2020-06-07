@@ -11,6 +11,10 @@
 #include <Eigen/Dense>
 
 namespace fem {
+	struct SolveData {
+
+	};
+
 	class Model {
 	public:
 		Model() : Model{ 0 } {}
@@ -30,6 +34,8 @@ namespace fem {
 		void validate();
 		void initCoords();
 		void solve();
+
+		Eigen::MatrixXd calcLocalStiffnessMatrix(Beam b);
 
 		/* 
 		get all actions, expressed in global coords
