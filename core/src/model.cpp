@@ -7,6 +7,9 @@
 
 using spdlog::info;
 using spdlog::warn;
+using Eigen::VectorXd;
+using Eigen::MatrixXd;
+using Eigen::Matrix3d;
 
 namespace fem {
 
@@ -25,6 +28,7 @@ namespace fem {
 	void Model::add(Node n) {
 		addAndCheckDuplicate(nodeIds, n.getId(), "node");
 		nodes.push_back(n);
+		ch.registerNode(n);
 	}
 	void Model::add(Beam b) {
 		addAndCheckDuplicate(beamIds, b.getId(), "beam");
@@ -80,23 +84,18 @@ namespace fem {
 		}
 	}
 
-	void Model::initCoords() {
-		// init the global coords
-		info("init the global coords");
-
-		ch = std::make_unique<CoordsHolder>();
-
-		// for all nodes,
-		for (auto& n : nodes) {
-			ch->registerNode(n);
-		}
-	}
-
-	Eigen::MatrixXd Model::calcLocalStiffnessMatrix(Beam b) {
+	/*
+	build the local stiffness matrix
+	convert the local stiffness matrix to global coordinates (rotate only, don't re-index)
+	then, re-index the coordinates to global indexes
+	*/
+	MatrixXd Model::calcStiffnessMatrix(Beam b) {
 		// calc k, in local coord indexes, but in global SOR
-		auto k = b.getLocalStiffness();
-		auto sor = b.getLocalSOR();
-		return k;
+		MatrixXd k = b.getLocalStiffness();
+		Matrix3d sor = b.getLocalSOR();
+		MatrixXd rotation(6, 6);
+		rotation << sor.transpose(), Matrix3d::Zero(), Matrix3d::Zero(), sor.transpose();
+		return rotation.transpose() * k * rotation;
 	}
 
 	/*
@@ -106,33 +105,51 @@ namespace fem {
 	K*displacements=external_forces
 	
 	*/
-	void Model::solve() {
+	VectorXd Model::solve() {
 		info("solve: called");
-		initCoords();
+
+		
+		VectorXd displacement;
+		return displacement;
+	}
+	
+	/*
+	build K, apply displacement to K, and return K*d-r
+	*/
+	VectorXd Model::computeResidual(VectorXd displacement) {
 
 		// residual, solve for K*x=r
 		auto res = getGlobalActions();
 
 		// for all elements,
 		for (Beam& b : beams) {
-
-			calcLocalStiffnessMatrix(b);
-
+			calcStiffnessMatrix(b);
 		}
 		// build the local stiffness matrix
-
 		// for all forces/loads, retrieve the local force and convert into global force
 
-
+		VectorXd residual;
+		return residual;
+	}
+	/*
+	return a zero array, with local displacements for all coordinates
+	NOTE, is a dof the same as a coordinate? (NO)
+	shoudl we distinguish between dof (enters into the stiffness matrix K)
+	and a coordinate (could be excluded from the stiffness matrix)
+	OR, do we put all coords into K? then if K entries are zero (no reaction on a variable), we have a zero row
+	note, K_{i}=(0,..,0) iff the reaction on coordinate j is zero, when x_{i} is displaced. 
+	NOTE, the constraints coordinates DO NOT become rows of K.
+	that is, the initially are, but then we split free vs. constrained nodes, and build a REDUCED K matrix.
+	known coordinates (constrained coordinates are not changes, so we know the solution for these) go on the RHS
+	*/
+	VectorXd Model::getZeroDisplacement() {
+		int modelDimension = nodes.size() * 3;
+		VectorXd zeroDisp(modelDimension);
+		zeroDisp.setZero();
+		return zeroDisp;
 	}
 	
-	using Eigen::VectorXd;
-
 	std::unique_ptr<VectorXd> Model::getGlobalActions() {
-		if (!ch) {
-			warn("ch is uninitialized");
-			throw std::exception("ch is uninitialized");
-		}
 		int numNodes = nodes.size();
 		// sum up all coords for all nodes
 		auto res = std::make_unique<VectorXd>(numNodes*3);
@@ -144,9 +161,9 @@ namespace fem {
 			// for each force coord, get the respective global coord
 			int nodeId = f.getNodeId();
 			
-			int globalIdX = ch->getGlobalCoord(nodeId, 0);
-			int globalIdY = ch->getGlobalCoord(nodeId, 1);
-			int globalIdZ = ch->getGlobalCoord(nodeId, 2);
+			int globalIdX = ch.getGlobalCoord(nodeId, 0);
+			int globalIdY = ch.getGlobalCoord(nodeId, 1);
+			int globalIdZ = ch.getGlobalCoord(nodeId, 2);
 			(*res)[globalIdX] += f.getPosition().x();
 			(*res)[globalIdY] += f.getPosition().y();
 			(*res)[globalIdZ] += f.getPosition().z();

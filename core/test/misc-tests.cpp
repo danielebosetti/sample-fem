@@ -13,6 +13,9 @@ using namespace fem;
 using std::cout;
 using spdlog::info;
 using spdlog::warn;
+using Eigen::VectorXd;
+using Eigen::MatrixXd;
+using Eigen::Matrix3d;
 
 TEST(core_misc_test, test_duplicate_node_id)
 {
@@ -29,14 +32,24 @@ TEST(core_misc_test, test_duplicate_beam_id)
 	EXPECT_ANY_THROW(m.add(b1, b1));
 }
 
-int main(int argc, char* argv[]) {
-	spdlog::set_pattern("%X.%e [%^%l%$] %v");
-	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
-}
-
 TEST(core_misc_test, test_missing_node)
 {
 	Model m;
 	EXPECT_ANY_THROW(m.getNode(1));
+}
+
+/*
+demo using matrix block operations
+*/
+void test_001()
+//TEST(test_solve, use_matrix_block)
+{
+	MatrixXd a(6, 6);
+	Matrix3d r, z, b, k;
+	r.setIdentity();
+	z.setZero();
+	b.setConstant(3);
+	k.setConstant(9);
+	a << r, z, b, k;
+	info("a=\n{}", a);
 }

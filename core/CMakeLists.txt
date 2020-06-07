@@ -5,7 +5,8 @@ add_compile_options(/wd26444)
 file(GLOB_RECURSE MODULE_SOURCES src/*.cpp)
 file(GLOB_RECURSE MODULE_HEADERS include/*.h)
 #file(GLOB_RECURSE MODULE_SOURCES_TEST test/*.cpp)
-set(MODULE_SOURCES_TEST test/test-simple.cpp)
+set(MODULE_SOURCES_TEST test/test-solve.cpp test/test-main.cpp)
+set(MISC_SOURCES_TEST test/test-simple.cpp test/misc-tests.cpp)
 
 source_group("src" FILES ${MODULE_SOURCES})
 source_group("include" FILES ${MODULE_HEADERS})
@@ -32,7 +33,7 @@ add_executable( core_test ${MODULE_SOURCES_TEST} )
 target_link_libraries( core_test core )
 target_link_libraries( core_test GTest::GTest)
 
-add_executable( misc_core_test test/misc-tests.cpp )
+add_executable( misc_core_test ${MISC_SOURCES_TEST} )
 target_link_libraries( misc_core_test core )
 target_link_libraries( misc_core_test GTest::GTest)
 

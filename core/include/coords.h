@@ -49,18 +49,25 @@ namespace fem {
 	template<class T>
 	void listAll(std::string caption, std::vector<T> list);
 
-	// "store" all nodes, 
+	/* 
+	store the mapping between local node coords (numbered 0..n) and global model coords (numbered 0..N) 
+	*/
 	class CoordsHolder {
 	public:
 		CoordsHolder() {
 		}
+		/*
+		reserves a global coordinate index for the given local coordinate
+		*/
 		void registerCoord(int nodeId, int localId) {
 			int globalId = globalCount++;
-			coords.push_back(CoordMapping{ globalId ,nodeId, localId });
+			coords.push_back(CoordMapping{ globalId, nodeId, localId });
 			// map (node,index) to globalIndex
 			localToGlobal[LocalCoord{ nodeId, localId }] = globalId;
 		}
-		// registers coordinates for this node
+		/*
+		reserves global coordinate indexes for the given node
+		*/
 		void registerNode(Node n) {
 			int nodeId = n.getId();
 			registerCoord(nodeId, 0);

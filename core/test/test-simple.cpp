@@ -27,7 +27,7 @@ TEST(test_solve, single_beam_x)
 	Beam b1{ 0, n1, n2 };
 	NodeForce f1{ 0, 0, 1, 0, 0 };
 	m.add(n1, n2, b1, f1);
-	m.listAll();
+//	m.listAll();
 
 	m.solve();
 }
@@ -39,7 +39,6 @@ TEST(core_misc, global_actions_1)
 	Model m;
 	Node n{ 0, 0, 0, 0 };
 	m.add(n);
-	m.initCoords();
 	VectorXd r = *m.getGlobalActions();
 	VectorXd expected(3);
 	expected.setZero();
@@ -85,7 +84,6 @@ TEST(core_misc, global_actions_2_force)
 	Node n{ 0, 0, 0, 0 };
 	NodeForce f{ 0, 0, 0, 0, -3 };
 	m.add(n, f);
-	m.initCoords();
 	VectorXd r = *m.getGlobalActions();
 	Eigen::Vector3d expected(0, 0, -3);
 
@@ -106,7 +104,6 @@ TEST(core_misc, global_actions_3_force)
 	NodeForce f5{ 4, 2, 5, 5, 0 };
 	m.add(n1, n2, n3, f1, f2, f3, f4, f5);
 	m.validate();
-	m.initCoords();
 	VectorXd r = *m.getGlobalActions();
 	Eigen::VectorXd expected(9);
 	expected << 4, 0, -6, 1, -2, -6, 5, 5, 0;
@@ -122,8 +119,8 @@ TEST(core_misc, beam_stiff_1) {
 
 	auto k = b1.getLocalStiffness();
 	auto sor = b1.getLocalSOR();
-	info("\nk=\n{}", k);
-	info("\nsor=\n{}", sor);
+	//info("\nk=\n{}", k);
+	//info("\nsor=\n{}", sor);
 
 	//auto k = m.calcLocalStiffnessMatrix(b1);
 	//info("\nk=\n{}", k);
@@ -136,8 +133,8 @@ TEST(core_misc, beam_stiff_2) {
 
 	auto k = b1.getLocalStiffness();
 	auto sor = b1.getLocalSOR();
-	info("\nk=\n{}", k);
-	info("\nsor=\n{}", sor);
+	//info("\nk=\n{}", k);
+	//info("\nsor=\n{}", sor);
 
 	//auto k = m.calcLocalStiffnessMatrix(b1);
 	//info("\nk=\n{}", k);
