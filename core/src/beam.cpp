@@ -6,6 +6,7 @@
 
 using fem::Node;
 using Eigen::Vector3d;
+using Eigen::Matrix3d;
 using Eigen::MatrixXd;
 
 namespace fem {
@@ -49,6 +50,16 @@ namespace fem {
 		res << e1, e2, e3;
 		return res;
 	}
+
+	MatrixXd Beam::calcStiffnessMatrix() {
+		// calc k, in local coord indexes, but in global SOR
+		MatrixXd k = getLocalStiffness();
+		Matrix3d sor = getLocalSOR();
+		MatrixXd rotation(6, 6);
+		rotation << sor.transpose(), Matrix3d::Zero(), Matrix3d::Zero(), sor.transpose();
+		return rotation.transpose() * k * rotation;
+	}
+
 
 	int Beam::getId() const
 	{

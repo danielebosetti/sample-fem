@@ -4,6 +4,7 @@
 #include "node.h"
 #include "beam.h"
 #include "nodeforce.h"
+#include "nodefreedom.h"
 #include "beamdistload.h"
 #include <unordered_map>
 #include <unordered_set>
@@ -29,6 +30,7 @@ namespace fem {
 		void add(Beam b);
 		void add(NodeForce f);
 		void add(BeamDistLoad beamDistLoad);
+		void add (NodeFreedom nodeFreedom);
 
 		bool hasNode(int nodeId);
 		void validate();
@@ -41,15 +43,20 @@ namespace fem {
 		*/
 		Eigen::VectorXd computeResidual(Eigen::VectorXd displacement);
 
-		Eigen::VectorXd getZeroDisplacement();
+		/*
+		compute the global stiffness matrix
+		*/
+		Eigen::MatrixXd computeGlobalStiffnessMatrix();
 
-		Eigen::MatrixXd calcStiffnessMatrix(Beam b);
+		Eigen::VectorXd getZeroDisplacement();
+		std::vector<int> getConstrainedCoords();
 
 		/* 
 		get all actions, expressed in global coords
 		actions can be forces or moments
 		*/
-		std::unique_ptr<Eigen::VectorXd> getGlobalActions();
+		Eigen::VectorXd getGlobalActions();
+		int numGlobalCoords();
 
 		// debug/check
 		void listAll();
@@ -65,9 +72,11 @@ namespace fem {
 		std::vector<Beam> beams;
 		std::vector<NodeForce> nodeForces;
 		std::vector<BeamDistLoad> beamDistLoads;
+		std::vector<NodeFreedom> nodeFreedoms;
 
 		std::unordered_set<int> nodeIds;
 		std::unordered_set<int> beamIds;
+		std::unordered_set<int> nodeFreedomIds;
 		// map global dofs to each node, and the index in that node
 		// but dofs ids in the node?
 		// std::unordered_map<int, std::pair<int, int>> dofs;

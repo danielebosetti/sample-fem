@@ -15,8 +15,15 @@ namespace fem {
 		Eigen::MatrixXd getLocalStiffness();
 		Eigen::Matrix3d getLocalSOR();
 		int getId() const;
-		fem::Node getNode1() { return node1; }
-		fem::Node getNode2() { return node2; }
+		fem::Node& getNode1() { return node1; }
+		fem::Node& getNode2() { return node2; }
+
+		/*
+		build the local stiffness matrix
+		convert the local stiffness matrix to global coordinates (rotate only, don't re-index)
+		then, re-index the coordinates to global indexes
+		*/
+		Eigen::MatrixXd calcStiffnessMatrix();
 
 		template<typename ostream>
 		friend ostream& operator<<(ostream& os, const fem::Beam& b)

@@ -1,6 +1,11 @@
 message("    core: ")
 
 add_compile_options(/wd26444)
+if (MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+endif()
+
+
 
 file(GLOB_RECURSE MODULE_SOURCES src/*.cpp)
 file(GLOB_RECURSE MODULE_HEADERS include/*.h)

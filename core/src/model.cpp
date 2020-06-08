@@ -59,6 +59,11 @@ namespace fem {
 		beamDistLoads.push_back(beamDistLoad);
 	}
 
+	void Model::add(NodeFreedom nodeFreedom) {
+		addAndCheckDuplicate(nodeFreedomIds, nodeFreedom.getId(), "nodeFreedom");
+		nodeFreedoms.push_back(nodeFreedom);
+	}
+
 	Node Model::getNode(int id) {
 		if (hasNode(id)) {
 			return nodesMap[id];
@@ -85,17 +90,19 @@ namespace fem {
 	}
 
 	/*
-	build the local stiffness matrix
-	convert the local stiffness matrix to global coordinates (rotate only, don't re-index)
-	then, re-index the coordinates to global indexes
+	return the list of all constrained global coords
 	*/
-	MatrixXd Model::calcStiffnessMatrix(Beam b) {
-		// calc k, in local coord indexes, but in global SOR
-		MatrixXd k = b.getLocalStiffness();
-		Matrix3d sor = b.getLocalSOR();
-		MatrixXd rotation(6, 6);
-		rotation << sor.transpose(), Matrix3d::Zero(), Matrix3d::Zero(), sor.transpose();
-		return rotation.transpose() * k * rotation;
+	std::vector<int> Model::getConstrainedCoords() {
+		std::vector<int> res;
+		// for each nodeFreedom
+		for (NodeFreedom& nf : nodeFreedoms) {
+			int nodeId = nf.getId();
+			for (int constrainedCoord : nf.getConstraints()) {
+				int globalCoordId=ch.getGlobalCoord(nodeId, constrainedCoord);
+				res.push_back(globalCoordId);
+			}
+		}
+		return res;
 	}
 
 	/*
@@ -104,33 +111,69 @@ namespace fem {
 	build the global stiffness matrix, and solve for
 	K*displacements=external_forces
 	
+	SPLIT free and constrained nodes
 	*/
 	VectorXd Model::solve() {
 		info("solve: called");
+		MatrixXd K = computeGlobalStiffnessMatrix();
+		MatrixXd F = getGlobalActions();
 
-		
-		VectorXd displacement;
-		return displacement;
+		std::vector<int> constrainedCoords = getConstrainedCoords();
+
+		info("solve: K=\n{}", K);
+		info("solve: F=\n{}", F);
+		VectorXd sol = K.colPivHouseholderQr().solve(F);
+		info("solve: sol=\n{}", sol);
+		return sol;
 	}
 	
 	/*
-	build K, apply displacement to K, and return K*d-r
+	build K, apply displacement to K, and return K*disp-r
+	displacement is expressed in global coordinates
 	*/
 	VectorXd Model::computeResidual(VectorXd displacement) {
-
 		// residual, solve for K*x=r
 		auto res = getGlobalActions();
-
-		// for all elements,
-		for (Beam& b : beams) {
-			calcStiffnessMatrix(b);
-		}
+		auto K = computeGlobalStiffnessMatrix();
 		// build the local stiffness matrix
 		// for all forces/loads, retrieve the local force and convert into global force
 
-		VectorXd residual;
-		return residual;
+		return K*displacement-res;
 	}
+
+	MatrixXd Model::computeGlobalStiffnessMatrix() {
+		// init global_K
+		MatrixXd K(numGlobalCoords(), numGlobalCoords());
+		K.setZero();
+
+		// for all elements,
+		for (Beam& b : beams) {
+			auto K_beam = b.calcStiffnessMatrix();
+			// K_beam is expressed in the global coord system, but using local indexes (does this make sense?)
+			// map coordinates into K_global
+
+			int nodeId1 = b.getNode1().getId();
+			int nodeId2 = b.getNode2().getId();
+
+			// k_beam is 6*6, using vars:
+			std::vector<int> coordMap;
+			coordMap.push_back(ch.getGlobalCoord(nodeId1, 0));
+			coordMap.push_back(ch.getGlobalCoord(nodeId1, 1));
+			coordMap.push_back(ch.getGlobalCoord(nodeId1, 2));
+			coordMap.push_back(ch.getGlobalCoord(nodeId2, 0));
+			coordMap.push_back(ch.getGlobalCoord(nodeId2, 1));
+			coordMap.push_back(ch.getGlobalCoord(nodeId2, 2));
+
+			// extract from k_beam
+			for (int i = 0; i < coordMap.size(); i++) {
+				for (int j = 0; j < coordMap.size(); j++) {
+					K(coordMap[i], coordMap[j]) += K_beam(i, j);
+				}
+			}
+		}
+		return K;
+	}
+
 	/*
 	return a zero array, with local displacements for all coordinates
 	NOTE, is a dof the same as a coordinate? (NO)
@@ -148,12 +191,19 @@ namespace fem {
 		zeroDisp.setZero();
 		return zeroDisp;
 	}
-	
-	std::unique_ptr<VectorXd> Model::getGlobalActions() {
-		int numNodes = nodes.size();
+
+	/*
+	return the total number of coordinates for this model
+	including constrained nodes/dof-s
+	*/
+	int Model::numGlobalCoords() {
+		return nodes.size() * 3;
+	}
+
+	VectorXd Model::getGlobalActions() {
 		// sum up all coords for all nodes
-		auto res = std::make_unique<VectorXd>(numNodes*3);
-		res->setZero();
+		VectorXd res(numGlobalCoords());
+		res.setZero();
 		// for each force
 		for (NodeForce& f : nodeForces) {
 
@@ -164,9 +214,9 @@ namespace fem {
 			int globalIdX = ch.getGlobalCoord(nodeId, 0);
 			int globalIdY = ch.getGlobalCoord(nodeId, 1);
 			int globalIdZ = ch.getGlobalCoord(nodeId, 2);
-			(*res)[globalIdX] += f.getPosition().x();
-			(*res)[globalIdY] += f.getPosition().y();
-			(*res)[globalIdZ] += f.getPosition().z();
+			res[globalIdX] += f.getPosition().x();
+			res[globalIdY] += f.getPosition().y();
+			res[globalIdZ] += f.getPosition().z();
 		}
 		return res;
 	}
