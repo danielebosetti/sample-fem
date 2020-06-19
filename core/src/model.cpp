@@ -2,11 +2,13 @@
 #include "model.h"
 
 #include <iostream>
+#include <numeric>
 #include "spdlog/spdlog.h"
 #include "coords.h"
 
 using spdlog::info;
 using spdlog::warn;
+using std::vector;
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
 using Eigen::Matrix3d;
@@ -27,6 +29,7 @@ namespace fem {
 
 	void Model::add(Node n) {
 		addAndCheckDuplicate(nodeIds, n.getId(), "node");
+		nodesMap[n.getId()] = n;
 		nodes.push_back(n);
 		ch.registerNode(n);
 	}
@@ -89,6 +92,15 @@ namespace fem {
 		}
 	}
 
+	std::vector<int> Model::getAllCoords() {
+		int modelDimension = nodes.size() * 3;
+		std::vector<int> res;
+		res.reserve(modelDimension);
+		for (int i = 0; i < modelDimension; i++)
+			res.push_back(i);
+		return res;
+	}
+
 	/*
 	return the list of all constrained global coords
 	*/
@@ -96,14 +108,30 @@ namespace fem {
 		std::vector<int> res;
 		// for each nodeFreedom
 		for (NodeFreedom& nf : nodeFreedoms) {
-			int nodeId = nf.getId();
+			int nodeId = nf.getNodeId();
 			for (int constrainedCoord : nf.getConstraints()) {
 				int globalCoordId=ch.getGlobalCoord(nodeId, constrainedCoord);
 				res.push_back(globalCoordId);
 			}
 		}
+		std::sort(res.begin(), end(res));
+		res.erase(unique(res.begin(), res.end()), res.end());
 		return res;
 	}
+
+	/*
+	return the list of all free global coords
+	*/
+	std::vector<int> Model::getFreeCoords() {
+		vector all = getAllCoords();
+		vector constrained = getConstrainedCoords();
+		vector<int> free;
+			std::set_difference(all.begin(), all.end(), constrained.begin(), constrained.end(),
+				std::inserter(free, free.begin()));
+		return free;
+	}
+
+
 
 	/*
 	solve the model using linear static analysis
@@ -112,17 +140,75 @@ namespace fem {
 	K*displacements=external_forces
 	
 	SPLIT free and constrained nodes
+
+	@returns the system solution, expressed as node displacements.
+	TODO add a way to retrieve the final node POSITION from these diplacements
 	*/
 	VectorXd Model::solve() {
 		info("solve: called");
+		int N = numGlobalCoords();
 		MatrixXd K = computeGlobalStiffnessMatrix();
-		MatrixXd F = getGlobalActions();
-
-		std::vector<int> constrainedCoords = getConstrainedCoords();
+		VectorXd F = getGlobalActions();
 
 		info("solve: K=\n{}", K);
 		info("solve: F=\n{}", F);
-		VectorXd sol = K.colPivHouseholderQr().solve(F);
+
+
+		vector<double> pos = getGlobalPositions();
+		VectorXd vpos(N);
+		for (int i = 0; i < N; i++)
+			vpos(i) = pos[i];
+
+		std::vector<int> freeCoords = getFreeCoords();
+		std::vector<int> constrainedCoords = getConstrainedCoords();
+
+		int numFreeCord = freeCoords.size();
+		int numConCord = constrainedCoords.size();
+
+		VectorXd freePos(numFreeCord);
+		VectorXd conPos(numConCord);
+
+		info("free coords num={}", numFreeCord);
+		info("constr coords num={}", numConCord);
+
+		// K=|Kf Kc|
+		//   where Kf are free coords and Kc are constrained coords
+
+		// build Kf
+		MatrixXd Kf(numFreeCord, numFreeCord);
+		for (int i = 0; i < numFreeCord; i++) {
+			for (int j = 0; j < numFreeCord; j++) {
+				Kf(i,j) = K(freeCoords[i], freeCoords[j]);
+			}
+		}
+		// build Kc
+		MatrixXd Kc(numFreeCord, numConCord);
+		for (int i = 0; i < numFreeCord; i++) {
+			for (int j = 0; j < numConCord; j++) {
+				Kc(i,j) = K(freeCoords[i], constrainedCoords[j]);
+			}
+		}
+
+		VectorXd xc(numConCord);
+		// build xConstrained
+		for (int i = 0; i < numConCord; i++) {
+			conPos(i) = pos[constrainedCoords[i]];
+		}
+		info("solve: conPos=\n{}", conPos);
+
+		// build Ff
+		VectorXd Ff(numFreeCord);
+		for (int i = 0; i < numFreeCord; i++) {
+			Ff(i) = F(freeCoords[i]);
+		}
+
+		//info("solve: Kc=\n{}", Kc);
+
+		VectorXd res = Ff - Kc * conPos;
+		info("solve: residual res=\n{}", res);
+		info("solve: Kf=\n{}", Kf);
+
+		VectorXd sol = Kf.colPivHouseholderQr().solve(res);
 		info("solve: sol=\n{}", sol);
 		return sol;
 	}
@@ -198,6 +284,23 @@ namespace fem {
 	*/
 	int Model::numGlobalCoords() {
 		return nodes.size() * 3;
+	}
+
+	/*
+	returns the position of all nodes, in the global reference system
+	*/
+	vector<double> Model::getGlobalPositions() {
+		vector<double> res;
+		res.resize((numGlobalCoords()));
+		//res.setZero();
+		for (Node& n : nodes) {
+			std::vector<CoordMapping> c = ch.getCoords(n.getId());
+			for (auto& cm : c) {
+				double pos = n.getVal(cm.localId);
+				res[cm.globalId] = pos;
+			}
+		}
+		return res;
 	}
 
 	VectorXd Model::getGlobalActions() {

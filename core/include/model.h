@@ -49,8 +49,11 @@ namespace fem {
 		Eigen::MatrixXd computeGlobalStiffnessMatrix();
 
 		Eigen::VectorXd getZeroDisplacement();
+		std::vector<int> getAllCoords();
 		std::vector<int> getConstrainedCoords();
+		std::vector<int> getFreeCoords();
 
+		std::vector<double> getGlobalPositions();
 		/* 
 		get all actions, expressed in global coords
 		actions can be forces or moments

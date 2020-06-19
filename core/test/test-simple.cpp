@@ -39,7 +39,7 @@ TEST(core_misc, global_actions_1)
 	Model m;
 	Node n{ 0, 0, 0, 0 };
 	m.add(n);
-	VectorXd r = *m.getGlobalActions();
+	VectorXd r = m.getGlobalActions();
 	VectorXd expected(3);
 	expected.setZero();
 
@@ -84,7 +84,7 @@ TEST(core_misc, global_actions_2_force)
 	Node n{ 0, 0, 0, 0 };
 	NodeForce f{ 0, 0, 0, 0, -3 };
 	m.add(n, f);
-	VectorXd r = *m.getGlobalActions();
+	VectorXd r = m.getGlobalActions();
 	Eigen::Vector3d expected(0, 0, -3);
 
 	info("r={}", r.transpose());
@@ -104,7 +104,7 @@ TEST(core_misc, global_actions_3_force)
 	NodeForce f5{ 4, 2, 5, 5, 0 };
 	m.add(n1, n2, n3, f1, f2, f3, f4, f5);
 	m.validate();
-	VectorXd r = *m.getGlobalActions();
+	VectorXd r = m.getGlobalActions();
 	Eigen::VectorXd expected(9);
 	expected << 4, 0, -6, 1, -2, -6, 5, 5, 0;
 	info("r={}", r.transpose());

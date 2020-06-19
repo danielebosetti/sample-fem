@@ -4,15 +4,20 @@
 
 namespace fem {
 
-	Node::Node(int id_, double x_, double y_, double z_) : id{ id_ }, x{ x_ }, y{ y_ }, z{ z_ } {
-		counter++;
+	Node::Node(int id_, Eigen::Vector3d position_) :
+		id{ id_ }, position{ position_ } {
 	}
 	Node::~Node() {
-		counter;
+	}
+
+	bool Node::operator ==(const Node& that) const {
+		return
+			(id == that.id) &&
+			(position == that.position);
 	}
 
 	Eigen::Vector3d Node::getPosition() {
-		return Eigen::Vector3d{x, y, z};
+		return position;
 	}
 
 	int Node::getId() const {
@@ -20,6 +25,9 @@ namespace fem {
 	}
 	int Node::dofCount() {
 		return 3;
+	}
+	double Node::getVal(int localCoord) {
+		return position(localCoord);
 	}
 }
 

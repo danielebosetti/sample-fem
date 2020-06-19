@@ -6,22 +6,16 @@
 #include <fmt/ostream.h>
 
 namespace fem {
-	// TODO find a better name?
-	//DX, DY, DZ, RX, RY, RZ
-	//class ConstraintDimension {
-	//public:
-	//	ConstraintDimension(int localCoordId_) : localCoordId{ localCoordId_} {}
-	//	int getLocalCoorId() const {
-	//		return localCoordId;
-	//	}
-	//private:
-	//	int localCoordId;
-	//};
 
+	/*
+	node-freedom, set the constrained (global) coordinates for node-i
+	*/
 	class NodeFreedom {
 	public:
+		/*
+		local coords indexed by [constraints] are constrained
+		*/
 		NodeFreedom(int id, int nodeId, std::vector<int> constraints);
-		// return the node id
 		int getId() const;
 		int getNodeId() const;
 		const std::vector<int> getConstraints() const { return constraints; }

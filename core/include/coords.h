@@ -61,9 +61,11 @@ namespace fem {
 		*/
 		void registerCoord(int nodeId, int localId) {
 			int globalId = globalCount++;
-			coords.push_back(CoordMapping{ globalId, nodeId, localId });
+			CoordMapping cm{ globalId, nodeId, localId };
+			coords.push_back(cm);
 			// map (node,index) to globalIndex
 			localToGlobal[LocalCoord{ nodeId, localId }] = globalId;
+			globalToCoords[globalId] = cm;
 		}
 		/*
 		reserves global coordinate indexes for the given node
@@ -99,9 +101,19 @@ namespace fem {
 			return localToGlobal[key];
 		}
 
+		/*
+		
+		*/
+		CoordMapping getGlobalCoord(int globalId) {
+			assert(globalToCoords.find(globalId) != globalToCoords.end());
+			return globalToCoords[globalId];
+		}
+
 	private:
 		std::vector<CoordMapping> coords;
 		std::unordered_map<LocalCoord, int, HashLocalCoord> localToGlobal;
+		// reference from global-id to 
+		std::unordered_map<int, CoordMapping> globalToCoords;
 		int globalCount = 0;
 	};
 

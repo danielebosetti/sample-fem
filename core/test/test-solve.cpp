@@ -6,6 +6,7 @@
 
 using namespace fem;
 using std::cout;
+using std::vector;
 using spdlog::info;
 using spdlog::warn;
 
@@ -26,8 +27,8 @@ public:
 		Node n2{ 1, 1, 0, 0 };
 		Beam b1{ 0, n1, n2 };
 		NodeForce f1{ 0, 1, 1, 0, 0 };
-		NodeFreedom nf1{ 0, 0, std::vector{0,1,2} };
-		m.add(n1, n2, b1, f1);
+		NodeFreedom nf1{ 0, 0, {0,1,2} };
+		m.add(n1, n2, b1, f1, nf1);
 		return m;
 	}
 
@@ -79,26 +80,9 @@ TEST(test_solve, DISABLED_local_k_z)
 	info("K=\n{}\n", b1.calcStiffnessMatrix());
 }
 
-/* local stiffness on single beam, beam is on the xy  plane */
-TEST(test_solve, local_k_xy)
-{
-	Model m;
-	Node n1{ 0, 0, 0, 0 };
-	Node n2{ 1, 1, 1, 0 };
-	Beam b1{ 0, n1, n2 };
-	info("k=\n{}", b1.getLocalStiffness());
-	info("K=\n{}\n", b1.calcStiffnessMatrix());
-	info("local-sor=\n{}\n", b1.getLocalSOR());
-}
-
-TEST(test_solve, model_num_coords) {
-	Model m;
-	EXPECT_EQ(m.numGlobalCoords(), 0);
-	m.add(Node{ 0,0,0,0 });
-	EXPECT_EQ(m.numGlobalCoords(), 3);
-}
-
-/* single beam, on x axis, with x force*/
+/* single beam, on x axis, with x force
+node 1 is constrained, so solution must be..
+*/
 TEST(test_solve, solve_simple_1)
 {
 	Model m = TestModelFactory::getTestModel1();
@@ -107,28 +91,10 @@ TEST(test_solve, solve_simple_1)
 	EXPECT_EQ(zeroDisp.rows(), 6);
 	// how do we check that model is solved?
 	VectorXd residual = m.computeResidual(zeroDisp);
-	info("residual={}", residual);
 	EXPECT_EQ(residual.rows(), 6);
+
 	VectorXd sol = m.solve();
-	VectorXd solve_residual = m.computeResidual(sol);
-	info("solve_residual=\n{}", solve_residual);
+	//info("sol={}", sol);
+	//VectorXd solve_residual = m.computeResidual(sol);
+	//info("solve_residual=\n{}", solve_residual);
 }
-
-/* single beam, on x axis, with x force*/
-TEST(test_solve, DISABLED_solve_model_2) {
-	Model m = TestModelFactory::getTestModel2();
-	auto K = m.computeGlobalStiffnessMatrix();
-	info("global K=\n{}", K);
-	auto F = m.getGlobalActions();
-	info("F=\n{}", F);
-}
-
-
-TEST(test_solve, test_constrained_coords) {
-	Model m;
-	auto v1 = m.getConstrainedCoords();
-	EXPECT_EQ(v1.size(), 0);
-	//m.add(NodeFreedom{ 0,0,std::vector<ConstraintDimension>{} })
-//	std::vector<int> Model::getConstrainedCoords()
-}
-
