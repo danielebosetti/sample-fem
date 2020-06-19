@@ -202,8 +202,6 @@ namespace fem {
 			Ff(i) = F(freeCoords[i]);
 		}
 
-		//info("solve: Kc=\n{}", Kc);
-
 		VectorXd res = Ff - Kc * conPos;
 		info("solve: residual res=\n{}", res);
 		info("solve: Kf=\n{}", Kf);

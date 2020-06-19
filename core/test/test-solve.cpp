@@ -41,7 +41,9 @@ public:
 		Beam b1{ 0, n1, n2 };
 		Beam b2{ 1, n2, n3 };
 		NodeForce f1{ 0, 1, 0.01, 0, 0 };
-		m.add(n1, n2, n3, b1, b2, f1);
+		NodeFreedom nf1{ 0, 0, {0,1,2} };
+		NodeFreedom nf2{ 1, 2, {0,1,2} };
+		m.add(n1, n2, n3, b1, b2, f1, nf1, nf2);
 		auto sol = m.solve();
 		info("sol=\n{}", sol);
 		return m;
@@ -86,15 +88,16 @@ node 1 is constrained, so solution must be..
 TEST(test_solve, solve_simple_1)
 {
 	Model m = TestModelFactory::getTestModel1();
-	auto zeroDisp = m.getZeroDisplacement();
-	EXPECT_NEAR(zeroDisp.norm(), 0, EPS);
-	EXPECT_EQ(zeroDisp.rows(), 6);
-	// how do we check that model is solved?
-	VectorXd residual = m.computeResidual(zeroDisp);
-	EXPECT_EQ(residual.rows(), 6);
-
 	VectorXd sol = m.solve();
-	//info("sol={}", sol);
+	//VectorXd solve_residual = m.computeResidual(sol);
+	//info("solve_residual=\n{}", solve_residual);
+}
+
+/* 2 beams, 1 node */
+TEST(test_solve, solve_simple_2)
+{
+	Model m = TestModelFactory::getTestModel2();
+	VectorXd sol = m.solve();
 	//VectorXd solve_residual = m.computeResidual(sol);
 	//info("solve_residual=\n{}", solve_residual);
 }
