@@ -92,8 +92,12 @@ namespace fem {
 		}
 	}
 
+	/*
+	returns an array with values (0,1,..,N)
+	where N is the number of independent coordinates in the model (sum of dofs for all nodes)
+	*/
 	std::vector<int> Model::getAllCoords() {
-		int modelDimension = nodes.size() * 3;
+		int modelDimension = numGlobalCoords();
 		std::vector<int> res;
 		res.reserve(modelDimension);
 		for (int i = 0; i < modelDimension; i++)
@@ -152,7 +156,6 @@ namespace fem {
 
 		info("solve: K=\n{}", K);
 		info("solve: F=\n{}", F);
-
 
 		vector<double> pos = getGlobalPositions();
 		VectorXd vpos(N);
@@ -239,14 +242,20 @@ namespace fem {
 			int nodeId1 = b.getNode1().getId();
 			int nodeId2 = b.getNode2().getId();
 
-			// k_beam is 6*6, using vars:
+			// k_beam is 12*12, using vars:
 			std::vector<int> coordMap;
 			coordMap.push_back(ch.getGlobalCoord(nodeId1, 0));
 			coordMap.push_back(ch.getGlobalCoord(nodeId1, 1));
 			coordMap.push_back(ch.getGlobalCoord(nodeId1, 2));
+			coordMap.push_back(ch.getGlobalCoord(nodeId1, 3));
+			coordMap.push_back(ch.getGlobalCoord(nodeId1, 4));
+			coordMap.push_back(ch.getGlobalCoord(nodeId1, 5));
 			coordMap.push_back(ch.getGlobalCoord(nodeId2, 0));
 			coordMap.push_back(ch.getGlobalCoord(nodeId2, 1));
 			coordMap.push_back(ch.getGlobalCoord(nodeId2, 2));
+			coordMap.push_back(ch.getGlobalCoord(nodeId2, 3));
+			coordMap.push_back(ch.getGlobalCoord(nodeId2, 4));
+			coordMap.push_back(ch.getGlobalCoord(nodeId2, 5));
 
 			// extract from k_beam
 			for (int i = 0; i < coordMap.size(); i++) {
@@ -281,7 +290,11 @@ namespace fem {
 	including constrained nodes/dof-s
 	*/
 	int Model::numGlobalCoords() {
-		return nodes.size() * 3;
+		int sum = 0;
+		for (auto& entry : nodes) {
+			sum += entry.dofCount();
+		}
+		return sum;
 	}
 
 	/*

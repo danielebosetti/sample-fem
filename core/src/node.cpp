@@ -4,7 +4,7 @@
 
 namespace fem {
 
-	Node::Node(int id_, Eigen::Vector3d position_) :
+	Node::Node(int id_, Eigen::VectorXd position_) :
 		id{ id_ }, position{ position_ } {
 	}
 	Node::~Node() {
@@ -17,14 +17,16 @@ namespace fem {
 	}
 
 	Eigen::Vector3d Node::getPosition() {
-		return position;
+		Eigen::Vector3d pos;
+		pos << position.x(), position.y(), position.z();
+		return pos;
 	}
 
 	int Node::getId() const {
 		return id;
 	}
 	int Node::dofCount() {
-		return 3;
+		return 6;
 	}
 	double Node::getVal(int localCoord) {
 		return position(localCoord);

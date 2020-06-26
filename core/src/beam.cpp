@@ -16,12 +16,62 @@ namespace fem {
 	}
 
 	MatrixXd Beam::getLocalStiffness() {
-		MatrixXd res(6,6);
+		MatrixXd res(12,12);
 		res.setZero();
-		res(0, 0) = 1;
-		res(3, 0) = -1;
-		res(0, 3) = -1;
-		res(3, 3) = 1;
+		// see souma pag.55/613
+		double eal = E * A / L;
+		double eizl3 = E * Iz / (L * L * L);
+		double eiyl3 = E * Iy / (L * L * L);
+		double eiyl2 = E * Iy / (L * L);
+		double eizl2 = E * Iz / (L * L);
+		double gixl = G * Ix / L;
+		double eizl = E * Iz / L;
+
+		res(0, 0) = eal;
+		res(0, 6) = -eal;
+		res(6, 0) = -eal;
+		res(6, 6) = eal;
+
+		res(1, 1) = 12.* eizl3;
+		res(1, 7) = -12. * eizl3;
+		res(7, 1) = -12. * eizl3;
+		res(7, 7) = 12. * eizl3;
+
+		res(1, 5) = 6. * eizl2;
+		res(1, 11) = 6. * eizl2;
+		res(7, 5) = -6. * eizl2;
+		res(7, 11) = -6. * eizl2;
+
+		res(2, 2) = 12. * eiyl3;
+		res(2, 8) = -12. * eiyl3;
+		res(8, 2) = -12. * eiyl3;
+		res(8, 8) = 12. * eiyl3;
+
+		res(2, 4) = -6. * eiyl2;
+		res(2, 10) = -6. * eiyl2;
+		res(8, 4) = 6. * eiyl2;
+		res(8, 10) = 6. * eiyl2;
+
+		res(3, 3) = gixl;
+		res(3, 9) = -gixl;
+		res(9, 3) = -gixl;
+		res(9, 9) = gixl;
+
+		res(4, 2) = -eiyl2;
+		res(4, 8) = eiyl2;
+		res(10, 2) = -eiyl2;
+		res(10, 8) = eiyl2;
+
+		res(5, 1) = eizl2;
+		res(5, 7) = -eizl2;
+		res(11, 1) = eizl2;
+		res(11, 7) = -eizl2;
+
+		res(5, 5) = 4. * eizl;
+		res(5, 11) = 2. * eizl;
+		res(11, 5) = 2. * eizl;
+		res(11, 11) = 4. * eizl;
+
 		return res;
 	}
 
@@ -56,8 +106,14 @@ namespace fem {
 		MatrixXd k = getLocalStiffness();
 		Matrix3d sor = getLocalSOR();
 		MatrixXd rotation(6, 6);
+		MatrixXd zero(6, 6);
+		zero.setZero();
+		MatrixXd rotation2(12, 12);
+
 		rotation << sor.transpose(), Matrix3d::Zero(), Matrix3d::Zero(), sor.transpose();
-		return rotation.transpose() * k * rotation;
+		rotation2 << rotation, zero, zero, rotation;
+
+		return rotation2.transpose() * k * rotation2;
 	}
 
 

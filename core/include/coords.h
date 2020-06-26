@@ -75,6 +75,9 @@ namespace fem {
 			registerCoord(nodeId, 0);
 			registerCoord(nodeId, 1);
 			registerCoord(nodeId, 2);
+			registerCoord(nodeId, 3);
+			registerCoord(nodeId, 4);
+			registerCoord(nodeId, 5);
 		}
 		void listAll() {
 			fem::listAll("CoordMappings:", coords);

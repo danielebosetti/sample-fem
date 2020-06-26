@@ -31,8 +31,23 @@ namespace fem {
 			return os << fmt::format("Beam[id={},node1={},node2={}]", b.id, b.node1.getId(), b.node2.getId());
 		}
 
+		/*
+		init length using the nod pos
+		*/
+		void init() {
+			L = (node2.getPosition() - node1.getPosition()).norm();
+		}
+
+		void setE(double E_) { E = E_; }
+		void setA(double A_) { A = A_; }
+		void setG(double G_) { G = G_; }
+		void setIx(double Ix_) { Ix = Ix_; }
+		void setIy(double Iy_) { Iy = Iy_; }
+		void setIz(double Iz_) { Iz = Iz_; }
+
 	private:
 		int id;
+		double L, E, A, G, Ix, Iy, Iz;
 		fem::Node node1, node2;
 	};
 }

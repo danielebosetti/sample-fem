@@ -26,8 +26,34 @@ public:
 		Node n1{ 0, 0, 0, 0 };
 		Node n2{ 1, 1, 0, 0 };
 		Beam b1{ 0, n1, n2 };
+		b1.setA(0.1);
+		b1.setE(0.1);
+		b1.setG(0.1);
+		b1.setIx(1.6e-3);
+		b1.setIy(2.e-4);
+		b1.setIz(2.e-3);
+		b1.init();
+
 		NodeForce f1{ 0, 1, 1, 0, 0 };
 		NodeFreedom nf1{ 0, 0, {0,1,2} };
+		m.add(n1, n2, b1, f1, nf1);
+		return m;
+	}
+	static Model getTestModel3() {
+		Model m;
+		Node n1{ 0, 0, 0, 0 };
+		Node n2{ 1, 1, 0, 0 };
+		Beam b1{ 0, n1, n2 };
+		b1.setA(0.1);
+		b1.setE(0.1);
+		b1.setG(0.1);
+		b1.setIx(1.6e-3);
+		b1.setIy(2.e-4);
+		b1.setIz(2.e-3);
+		b1.init();
+
+		NodeForce f1{ 0, 1, 1.e-3, 0, 0 };
+		NodeFreedom nf1{ 0, 0, {0,1,2,3,4,5} };
 		m.add(n1, n2, b1, f1, nf1);
 		return m;
 	}
@@ -89,12 +115,17 @@ TEST(test_solve, solve_simple_1)
 {
 	Model m = TestModelFactory::getTestModel1();
 	VectorXd sol = m.solve();
-	//VectorXd solve_residual = m.computeResidual(sol);
-	//info("solve_residual=\n{}", solve_residual);
+}
+TEST(test_solve, solve_simple_3)
+{
+	Model m = TestModelFactory::getTestModel3();
+	VectorXd sol = m.solve();
+	VectorXd solve_residual = m.computeResidual(sol);
+	info("solve_residual=\n{}", solve_residual);
 }
 
 /* 2 beams, 1 node */
-TEST(test_solve, solve_simple_2)
+TEST(test_solve, DISABLED_solve_simple_2)
 {
 	Model m = TestModelFactory::getTestModel2();
 	VectorXd sol = m.solve();

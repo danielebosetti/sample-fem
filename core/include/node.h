@@ -10,8 +10,12 @@ namespace fem {
 	public:
 		Node() : Node{0,0,0,0}{}
 		Node(const Node& other) : Node{ other.id, other.position } {};
-		Node(int id, double x, double y, double z) : Node{ id, {x,y,z} } {}
-		Node(int id, Eigen::Vector3d position);
+		Node(int id, double x, double y, double z) : Node{ id, x, y, z, 0, 0, 0 } {}
+		Node(int id_, double x, double y, double z, double rx, double ry, double rz) : id{ id_ } {
+			position.resize(6);
+			position << x, y, z, rx, ry, rz;
+		}
+		Node(int id, Eigen::VectorXd position);
 		~Node();
 
 		Eigen::Vector3d getPosition();
@@ -28,13 +32,14 @@ namespace fem {
 
 	private:
 		int id;
-		Eigen::Vector3d position;
+		// tx, ty, tz, rx, ry, rz in global coords
+		Eigen::VectorXd position;
 
 		//template<typename ostream>
 		using ostream = std::basic_ostream<char, std::char_traits<char>>;
 		friend ostream& operator<<(ostream& os, const Node& n)
 		{
-			return os << fmt::format("Node[id={},pos=[{},{},{}]]", n.id, n.position.x(), n.position.y(), n.position.z());
+			return os << fmt::format("Node[id={},pos=[{},{},{}]]", n.id, n.position(0), n.position(1), n.position(2));
 		}
 	};
 }
